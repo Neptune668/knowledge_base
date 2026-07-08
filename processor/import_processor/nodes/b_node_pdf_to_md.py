@@ -7,7 +7,7 @@ from processor.import_processor.exceptions import StateFieldError, FileProcessin
 from processor.import_processor.state import ImportGraphState
 
 
-class NodePdfToMd(BaseNode):
+class NodePDFToMD(BaseNode):
     name = "node_pdf_to_md"
     def process(self, state: ImportGraphState):
         logging.info(f"{self.name}节点开始执行...")

@@ -10,3 +10,5 @@ def process(self, state: ImportGraphState):
     logging.info(f"{self.name}节点开始执行...")
 
     return state
+class NodeEntry(BaseNode):
+    pass
