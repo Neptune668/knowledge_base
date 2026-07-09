@@ -16,7 +16,7 @@ class NodePDFToMD(BaseNode):
         # 2 获取上传链接并上传文件到mineru服务器
         # 3 下载zip压缩文件并且解压改名
         # 4 读取文件md_content
-
+1
 
         # 1 校验路径
         # 2 path封装路径
