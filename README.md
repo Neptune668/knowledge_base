@@ -4,22 +4,20 @@
 knowledge_base_0525掌柜智库
 
 #### 软件架构
-软件架构说明
-knowledge/
-api/                              # API 路由层
-core/                             # 核心配置
-processor/                        # 业务处理流程（LangGraph）
-schema/                          # 数据模型定义
-services/                        # 业务服务层
-utils/                           # 工具函数库
-front/                           # 前端页面
-test/                             # 测试代码
-docs/                             # 文档目录
-temp_data/                        # 临时数据目录
-.env                              # 环境配置文件
-.env.example                      # 环境配置文件模板
-pyproject.toml                    # Python 依赖声明
-uv.locl							# uv版本锁定文件
+软件架构说明 knowledge
+api                         # API 路由层
+core                        # 核心配置
+processor                   # 业务处理流程（LangGraph）
+schema                      # 数据模型定义
+services                    # 业务服务层
+utils                       # 工具函数库
+front                       # 前端页面
+test                        # 测试代码
+docs                        # 文档目录
+temp_data                   # 临时数据目录
+.env.example                # 环境配置文件模板
+pyproject.toml              # Python 依赖声明
+uv.locl					    # uv版本锁定文件
 
 #### 安装教程
 直接拉取就行了
