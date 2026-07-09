@@ -1,3 +1,4 @@
+import json
 import logging
 
 from langgraph.constants import END
@@ -15,14 +16,19 @@ from processor.import_processor.state import ImportGraphState
 
 
 class KBImportWorkflow:
-    def __init__(self, **kwargs):
+
+    def __init__(self, config=None):
         self._compiled_graph = None
 
     @property
     def graph(self):
+        """
+            返回图实例
+        """
         logging.info("获取图实例")
         if self._compiled_graph is None:
-            self._compiled_graph = self.build_graph()
+            self._compiled_graph = self.build_graph()  # 创建图
+
         return self._compiled_graph
 
     @staticmethod
@@ -36,7 +42,12 @@ class KBImportWorkflow:
             return END
 
     def build_graph(self):
+        """
+        创建主图
+        :return:
+        """
         graph = StateGraph(ImportGraphState)
+
         # 1 注册节点
         graph.add_node("a_node_entry", NodeEntry())
         graph.add_node("b_node_pdf_to_md", NodePDFToMD())
@@ -48,29 +59,34 @@ class KBImportWorkflow:
 
         graph.set_entry_point("a_node_entry")
 
-        # 条件边
+        # 2 节点边
         graph.add_conditional_edges(
-            'a_node_entry',
+            "a_node_entry",
             self.route_after_entry,
-            {"b_node_pdf_to_md": "b_node_pdf_to_md",
-             "c_node_md_img": "c_node_md_img",
-             END: END}
+            {
+                "c_node_md_img": "c_node_md_img",
+                "b_node_pdf_to_md": "b_node_pdf_to_md",
+                END: END
+            }
         )
+
         graph.add_edge("b_node_pdf_to_md", "c_node_md_img")
         graph.add_edge("c_node_md_img", "d_node_document_split")
         graph.add_edge("d_node_document_split", "e_node_item_name_recognition")
         graph.add_edge("e_node_item_name_recognition", "f_node_bge_embedding")
         graph.add_edge("f_node_bge_embedding", "g_node_import_milvus")
 
+        # 3 编译图
         graph_compile = graph.compile()
+
         return graph_compile
 
-        def run(self, state: ImportGraphState, stream: bool = False):
+    def run(self, state: ImportGraphState, stream: bool = False):
 
-            if stream:
-                return self.graph.stream(state, stream_mode="values")
-            else:
-                return self.graph.invoke(state)
+        if stream:
+            return self.graph.stream(state,stream_mode="values")
+        else:
+            return self.graph.invoke(state)
 
 
 if __name__ == "__main__":
