@@ -71,8 +71,8 @@ if __name__ == "__main__":
     setup_logging()
 
     init_state = {
-        "pdf_path": "E:\H3C.pdf",
-        "file_dir": "E:\output"
+        "pdf_path": r"C:\Users\YuanYi\Desktop\LangChain.pdf",
+        "file_dir": r"C:\Users\YuanYi\Desktop\a"
     }
 
     node = NodePDFToMD()
