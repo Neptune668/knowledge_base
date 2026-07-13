@@ -292,7 +292,7 @@ if __name__ == "__main__":
     setup_logging()
 
     init_state = {
-        "md_path": r"D:\output\LangChain\hybrid_auto\LangChain.md",
+        "md_path": r"D:\output\hak180产品安全手册\auto\hak180产品安全手册.md",
         "md_content": None
     }
 
