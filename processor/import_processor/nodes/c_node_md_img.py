@@ -232,18 +232,40 @@ class NodeMDImg(BaseNode):
     # 步骤4方法2批量上传文件
     def upload_images_batch(self, minio_client: Minio, upload_dir: str,
                             target_images: List[Tuple[str, str, Tuple[str, str]]]):
-
-        pass
+        urls = {}
+        for img_file, img_path, _ in target_images:
+            # 上传
+            object_name = f"{upload_dir}/{img_file}"  # minio文件对象名(路径:带后缀)
+            print(f"上传文件：{object_name}")
+            urls[img_file] = self.upload_to_minio(minio_client, img_path, object_name)
+        return urls
 
     # 步骤4方法3合并参数
     def merge_summary_and_url(self, summaries: Dict[str, str], urls) -> Dict[str, Tuple[str, str]]:
-        pass
+        image_info = {}
+        for image_file, summary in summaries.items():
+            # image_info[image_file] = (summary, urls[image_file])
+            # v url = urls.get(image_file)
+            if url := urls.get(image_file):
+                image_info[image_file] = (summary, url)
+        return image_info
 
     # 步骤4方法4替换md中的url和摘要summary
     def process_md_file(self, md_content: str, image_info: Dict[str, Tuple[str, str]]):
-        pass
+        for image_file, (summary, url) in image_info.items():
+            pattern = re.compile(r"!\[.*?\]\(.*?" + re.escape(image_file) + r".*?\)")
+            md_content = pattern.sub(lambda m: f"![{summary}]({url})", md_content)
+        return md_content
 
+    # 步骤4方法5上传minio
+    def upload_to_minio(self, minio_client: Minio, img_path: str, object_name: str) -> str:
 
+        # 上传minio
+        ifSuccess = minio_client.fput_object(bucket_name=minio_config.bucket_name, object_name=object_name,
+                                             file_path=img_path,
+                                             content_type=f"image/{os.path.splitext(img_path)[1][1:]}")
+        url = f"http://{minio_config.endpoint}/{minio_config.bucket_name}/{object_name}"  # http://192.168.222.99:9000/桶名/项目名/文档名/107.png
+        return url
 
     # 步骤5保存和备份新文档
     def _step_5_backup_new_md_file(self, origin_md_path: str, md_content: str) -> str:
