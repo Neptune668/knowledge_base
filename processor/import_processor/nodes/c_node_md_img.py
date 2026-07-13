@@ -91,9 +91,9 @@ class NodeMDImg(BaseNode):
             context = self._find_image_in_md(md_content, image_file)  # 找到图片的上下文
 
             # 过滤MD中未引用的图片
-            # if not context:
-            #     self.logger.warning(f"图片未在MD中引用，跳过处理：{image_file}")
-            #     continue
+            if not context:
+                self.logger.warning(f"图片未在MD中引用，跳过处理：{image_file}")
+                continue
 
             target_images.append((image_file, img_path, context))  # List[(str,str,Tuple(pre,post))]
 
