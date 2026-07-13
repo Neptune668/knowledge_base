@@ -232,6 +232,7 @@ class NodeMDImg(BaseNode):
     # 步骤4方法2批量上传文件
     def upload_images_batch(self, minio_client: Minio, upload_dir: str,
                             target_images: List[Tuple[str, str, Tuple[str, str]]]):
+
         pass
 
     # 步骤4方法3合并参数
@@ -243,11 +244,33 @@ class NodeMDImg(BaseNode):
         pass
 
 
+
+    # 步骤5保存和备份新文档
+    def _step_5_backup_new_md_file(self, origin_md_path: str, md_content: str) -> str:
+        """
+        步骤5：将处理后的MD内容保存为新文件（原文件不变，避免数据丢失）
+        新文件命名规则：原文件名 + _new.md（如test.md → test_new.md）
+        :param origin_md_path: 原始MD文件完整路径
+        :param md_content: 处理后的新MD内容
+        :return: 新MD文件的完整路径
+        """
+        # 构造新文件路径：替换原后缀为 _new.md
+        new_md_file_name = os.path.splitext(origin_md_path)[0] + "_new.md"
+
+        # 写入新MD内容（覆盖写入，若文件已存在则更新）
+        with open(new_md_file_name, "w", encoding="utf-8") as f:
+            f.write(md_content)
+
+        self.logger.info(f"处理后MD文件已保存，新文件路径：{new_md_file_name}")
+
+        return new_md_file_name
+
+
 if __name__ == "__main__":
     setup_logging()
 
     init_state = {
-        "md_path": r"E:\output\B530\hybrid_auto\B530.md",
+        "md_path": r"D:\output\LangChain\hybrid_auto\LangChain.md",
         "md_content": None
     }
 
