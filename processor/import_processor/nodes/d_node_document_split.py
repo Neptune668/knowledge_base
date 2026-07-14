@@ -9,6 +9,7 @@ from processor.import_processor.exceptions import StateFieldError
 from processor.import_processor.import_config import get_config
 from processor.import_processor.state import ImportGraphState
 
+
 class NodeDocumentSplit(BaseNode):
     """
     文档切分节点：智能文档切片
@@ -18,28 +19,38 @@ class NodeDocumentSplit(BaseNode):
 
     def process(self, state: ImportGraphState):
         """
-                文档切分节点：智能文档切片
-                :param state:
-                :return:
-                """
+        文档切分节点：智能文档切片
+        :param state:
+        :return:
+        """
         # 1 参数处理
         content, file_title = self._step_1_get_inputs(state)
 
         # 2 标题切(初切)
         sections, title_count, lines_count = self._step_2_split_by_title(content, file_title)
+        # for section in sections:
+        #     print(f"{section['title']}")
+        #     print(f"{section['content']}")
+        #     print("========================================================================================================")
+        # print(f"标题数量: {title_count}")
+        # print(f"行数: {lines_count}")
+
+
+        print("----------------------------------------------------------------------------------------------")
 
         # 3 无标题兜底(默认标题)
         sections = self._step_3_handle_no_title(content, sections, title_count, file_title)
 
         # 4 块精细化处理(长切短合)
         sections = self._step_4_refine_chunks(sections)
-        #测试输出
         for section in sections:
             print(f"{section['title']}")
             print(f"{section['content']}")
             print("========================================================================================================")
         print(f"标题数量: {title_count}")
         print(f"行数: {lines_count}")
+
+
         # 5 打印日志
         self._step_5_print_stats(lines_count, sections)
 
@@ -62,6 +73,7 @@ class NodeDocumentSplit(BaseNode):
 
         # 换行符处理
         content = content.replace("\r\n", "\n").replace("\r", "\n")
+
         return content, file_title
 
     # 步骤2：标题切(初切)
@@ -77,7 +89,7 @@ class NodeDocumentSplit(BaseNode):
         current_title = ""
 
         # 切换逻辑(标题切)
-        title_pattern = r'\s*#{1,6}\s+.+'
+        title_pattern = r'\s*#{1,6}\s+.+'  # 标题正则
 
         # 独立封装刷新块的逻辑函数
         def _flush_section():
@@ -102,7 +114,7 @@ class NodeDocumentSplit(BaseNode):
                 current_lines.append(line)
                 continue
 
-            if(not in_code_block) and (re.match(title_pattern, line)):
+            if (not in_code_block) and (re.match(title_pattern, line)):
                 # 标题处理，将之前存好的块内容封装成一个sections块
                 _flush_section()
                 current_title = striped_line  # 换标题
@@ -124,7 +136,9 @@ class NodeDocumentSplit(BaseNode):
 
     # 步骤4：块精细化处理(长切短合)
     def _step_4_refine_chunks(self, sections):
+
         print("node_document_split: 步骤4：块精细化处理(长切短合)")
+
         # 长切列表
         refined_split = []
         for sec in sections:
@@ -136,6 +150,7 @@ class NodeDocumentSplit(BaseNode):
         for sec in final_sections:
             if not sec.get("parent_title"):
                 sec["parent_title"] = sec.get("title") or ""
+
         return final_sections
 
     def _step_5_print_stats(self, lines_count, sections):
@@ -145,7 +160,8 @@ class NodeDocumentSplit(BaseNode):
     def _step_6_backup(self, state, sections):
         print("node_document_split: 步骤6：备份")
         pass
-   # 步骤4方法1长切
+
+    # 步骤4方法1长切
     def split_long_section(self, section: Dict[str, str]):
         print("node_document_split: 步骤4方法1长切")
         content = section.get("content", "")
@@ -196,14 +212,15 @@ class NodeDocumentSplit(BaseNode):
         print("node_document_split: 步骤4方法2短合")
         return refined_split
 
+
 if __name__ == "__main__":
     node = NodeDocumentSplit()
 
-    with open(r"D:\output\hak180产品安全手册\auto\hak180产品安全手册_new.md", "r", encoding="utf-8") as f:
+    with open("D:\output\hak180产品安全手册\auto\hak180产品安全手册_new.md", "r", encoding="utf-8") as f:
         md_content = f.read()
 
     init_state = {
-        "md_path": r"D:\output\hak180产品安全手册\auto\hak180产品安全手册_new.md",
+        "md_path": "D:\output\hak180产品安全手册\auto",
         "md_content": md_content,
         "file_title": "B530_new",
     }
