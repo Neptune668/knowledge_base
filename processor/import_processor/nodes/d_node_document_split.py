@@ -73,7 +73,7 @@ class NodeDocumentSplit(BaseNode):
             striped_line = line.strip()
 
             # 判断是否在代码块中
-            if striped_line.startwith("````") or striped_line.startwith("~~~"):
+            if striped_line.startwith("```") or striped_line.startwith("~~~"):
                 in_code_block = not in_code_block
                 current_lines.append(line)
 
