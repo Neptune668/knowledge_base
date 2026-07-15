@@ -1,4 +1,6 @@
+import json
 import re
+from pathlib import Path
 from typing import List, Dict
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -8,7 +10,6 @@ from processor.import_processor.base import BaseNode
 from processor.import_processor.exceptions import StateFieldError
 from processor.import_processor.import_config import get_config
 from processor.import_processor.state import ImportGraphState
-
 
 class NodeDocumentSplit(BaseNode):
     """
@@ -155,11 +156,24 @@ class NodeDocumentSplit(BaseNode):
 
     def _step_5_print_stats(self, lines_count, sections):
         print("node_document_split: 步骤5：打印日志")
-        pass
+        chunk_num = len(sections)
+        # 输出核心统计信息：原始行数/最终Chunk数/首个Chunk预览
+        self.logger.info("-" * 50 + " 文档切分统计信息 " + "-" * 50)
+        self.logger.info(f"MD原始文本总行数：{lines_count}")
+        self.logger.info(f"最终生成Chunk数量：{chunk_num}")
 
     def _step_6_backup(self, state, sections):
         print("node_document_split: 步骤6：备份")
-        pass
+
+        # sections切分结果输出文档路径
+        path = Path(state.get("md_path")).parent / f'{state.get("file_title")}_chunks.json'
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(
+                sections,
+                f,
+                ensure_ascii=False,
+                indent=2
+            )
 
     # 步骤4方法1长切
     def split_long_section(self, section: Dict[str, str]):
