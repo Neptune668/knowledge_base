@@ -11,9 +11,9 @@ class NodeItemNameRecognition(BaseNode):
 
     def process(self, state: ImportGraphState):
         # 1 参数处理
-
+        file_title,chunks = self._setp_1_get_inputs(state)
         # 2 上下文拼接
-
+        
         # 3 模型识别(总结)
 
         # 4 回填数据(item_name - > chunks)

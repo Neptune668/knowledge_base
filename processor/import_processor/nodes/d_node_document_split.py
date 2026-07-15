@@ -272,11 +272,11 @@ class NodeDocumentSplit(BaseNode):
 if __name__ == "__main__":
     node = NodeDocumentSplit()
 
-    with open("D:\output\hak180产品安全手册\auto\hak180产品安全手册_new.md", "r", encoding="utf-8") as f:
+    with open(r"D:\output\hak180产品安全手册\auto\hak180产品安全手册_new.md", "r", encoding="utf-8") as f:
         md_content = f.read()
 
     init_state = {
-        "md_path": "D:\output\hak180产品安全手册\auto",
+        "md_path": r"D:\output\hak180产品安全手册\auto\hak180产品安全手册_new.md",
         "md_content": md_content,
         "file_title": "B530_new",
     }
