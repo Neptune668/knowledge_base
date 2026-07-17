@@ -36,7 +36,7 @@ class NodeItemNameRecognition(BaseNode):
 
         # 4 回填数据(item_name - > chunks)
         self._step_4_update_chunks(state, chunks, item_name)
-        path = r"D:\output\hak180产品安全手册\auto\B530_new_chunks.json"
+        path = r"D:\output\hak180产品安全手册\auto\B530_new_new_chunks.json"
         with open(path, "w", encoding="utf-8") as f:
             json.dump(
                 chunks,
