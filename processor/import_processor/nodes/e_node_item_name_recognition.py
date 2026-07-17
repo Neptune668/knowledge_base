@@ -3,12 +3,16 @@ from typing import List, Dict
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
+from pymilvus import DataType
+from sympy.interactive.session import enable_automatic_symbols
 
 from config.lm_config import lm_config
+from config.milvus_config import milvus_config
 from processor.import_processor.base import BaseNode
 from processor.import_processor.exceptions import StateFieldError
 from processor.import_processor.state import ImportGraphState
 from utils.embedding_utils import generate_embeddings
+from utils.milvus_utils import get_milvus_client, escape_milvus_string
 
 
 class NodeItemNameRecognition(BaseNode):
@@ -142,7 +146,22 @@ class NodeItemNameRecognition(BaseNode):
 
     def _step_6_save_to_milvus(self, state, file_title, item_name, dense_vector, sparse_vector):
         print("node_item_name_recognition: 步骤6：存入milvus向量库")
-        pass
+
+        milvus_url = milvus_config.milvus_url  # 链接地址
+        collection_name = milvus_config.item_name_collection  # 表名
+        # 校验
+        if not milvus_url or not collection_name:
+            raise Exception("Milvus配置错误")
+
+        # 链接端
+        client = get_milvus_client()
+
+        # 字段(数据结构)
+        # 索引
+        # 建表
+        # 幂等性清理同名表数据(collection)
+        # 插入一条
+
 
 
 if __name__ == '__main__':
