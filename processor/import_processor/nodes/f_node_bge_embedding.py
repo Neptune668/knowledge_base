@@ -86,7 +86,7 @@ class NodeBGEEmbedding(BaseNode):
 
 if __name__ == "__main__":
     node = NodeBGEEmbedding()
-    with open(r"D:\output\hak180产品安全手册\auto\B530_new_chunks.json", "r", encoding="utf-8") as f:
+    with open(r"D:\output\hak180产品安全手册\auto\B530_new_new_chunks.json", "r", encoding="utf-8") as f:
         chunks_content = f.read()
 
     json_state = json.loads(chunks_content)
