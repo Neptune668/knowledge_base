@@ -29,15 +29,15 @@ class NodePDFToMD(BaseNode):
         zip_url = self._step_2_upload_and_poll(pdf_path_obj)
         print(zip_url)
         # 3 下载zip压缩文件并且解压改名
-        # md_path = self._step_3_download_and_extract(zip_url, output_dir_obj, pdf_path_obj.stem)
-        #
-        # # 4 读取文件md_content
-        # with open(md_path, "r", encoding="utf-8") as md_file:
-        #     md_content = md_file.read()
-        #
-        # # 5 设置state结果
-        # state["md_content"] = md_content
-        # state["md_path"] = md_path
+        md_path = self._step_3_download_and_extract(zip_url, output_dir_obj, pdf_path_obj.stem)
+
+        # 4 读取文件md_content
+        with open(md_path, "r", encoding="utf-8") as md_file:
+            md_content = md_file.read()
+
+        # 5 设置state结果
+        state["md_content"] = md_content
+        state["md_path"] = md_path
         return state
 
     def _step_1_validate_paths(self, state: ImportGraphState):
@@ -170,21 +170,21 @@ class NodePDFToMD(BaseNode):
         target_md_file.rename(new_md_path)
         self.logger.info(f"【MD重命名】重命名成功，文件名：{pdf_stem}.md")
 
-        return "md_path"
+        return new_md_path
 
 
-if __name__ == "__main__":
-    setup_logging()
-
-    init_state = {
-        "pdf_path": r"C:\Users\YuanYi\Desktop\LangChain.pdf",
-        "file_dir": r"C:\Users\YuanYi\Desktop\a"
-    }
-
-    node = NodePDFToMD()
-    result = node(init_state)
-
-    # 打印结果
-    dumps = json.dumps(result, ensure_ascii=False, indent=4)
-
-    print(dumps)
+# if __name__ == "__main__":
+#     setup_logging()
+#
+#     init_state = {
+#         "pdf_path": r"C:\Users\YuanYi\Desktop\hak180产品安全手册.pdf",
+#         "file_dir": r"C:\Users\YuanYi\Desktop\a"
+#     }
+#
+#     node = NodePDFToMD()
+#     result = node(init_state)
+#
+#     # 打印结果
+#     dumps = json.dumps(result, ensure_ascii=False, indent=4)
+#
+#     print(dumps)
