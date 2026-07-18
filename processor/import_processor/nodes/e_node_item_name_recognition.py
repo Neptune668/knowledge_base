@@ -4,7 +4,6 @@ from typing import List, Dict
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from pymilvus import DataType
-from sympy.interactive.session import enable_automatic_symbols
 
 from config.lm_config import lm_config
 from config.milvus_config import milvus_config
@@ -74,9 +73,9 @@ class NodeItemNameRecognition(BaseNode):
 
         parts: List[Dict] = []
         total_chars = 0
-        for index, chunk in enumerate(chunks[:k],start=1):
-            chunk_title = chunk.get("title","")
-            chunk_content = chunk.get("content","")
+        for index, chunk in enumerate(chunks[:k], start=1):
+            chunk_title = chunk.get("title", "")
+            chunk_content = chunk.get("content", "")
 
             # 格式化
             piece = f"【切片{index}】\n标题{chunk_title}\n内容：{chunk_content}"
@@ -120,15 +119,15 @@ class NodeItemNameRecognition(BaseNode):
                        3. 如果无法识别商品名称,请返回空字符串。
                """
 
-        message =[
+        message = [
             SystemMessage("你是一个专业的商品名称识别模型，请根据提供的信息，识别商品名称。名称最好不要超过20个字"),
             HumanMessage(prompt)
         ]
 
-        #调用
+        # 调用
         response = llm_ai.invoke(message)
 
-        #解析，数据清洗
+        # 解析，数据清洗
         item_name = getattr(response, "content", "").strip()  # 主体名称
         item_name = item_name.replace(" ", "").replace("\n", "").replace("\t", "").replace("\r", "")
 
@@ -146,7 +145,7 @@ class NodeItemNameRecognition(BaseNode):
 
     def _step_5_generate_vectors(self, item_name):
         print("node_item_name_recognition: 步骤5：主体名称向量化,返回稠密和稀疏数据")
-        embeddings = generate_embeddings([item_name]) # 稠密和稀疏向量
+        embeddings = generate_embeddings([item_name])  # 稠密和稀疏向量
         dense = embeddings["dense"][0]
         sparse = embeddings["sparse"][0]
         return dense, sparse
@@ -220,24 +219,23 @@ class NodeItemNameRecognition(BaseNode):
         if not client.has_collection(collection_name):
             client.create_collection(collection_name=collection_name, schema=schema, index_params=index_params)
 
-        # 幂等性清理同名表数据(collection)
+        # 幂等性清理同名(item_name)表数据(collection)
         safe_item_name = escape_milvus_string(item_name)
         filter_expr = f'item_name=="{safe_item_name}"'
         client.delete(collection_name=collection_name, filter=filter_expr)
 
         # 插入一条
-        data ={
+        data = {
             "file_title": file_title,
             "item_name": item_name,
             "dense_vector": dense_vector,
             "sparse_vector": sparse_vector,
         }
         client.insert(collection_name=collection_name, data=data)
-        client.load_collection(collection_name)     # 将表数据从存储引擎加载到搜索引擎，为了将来查询相似度用
+        client.load_collection(collection_name)  # 将表数据从存储引擎加载到搜索引擎，为了将来查询相似度用
 
         state["item_name"] = item_name
         return state
-
 
 
 if __name__ == '__main__':
