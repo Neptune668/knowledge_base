@@ -288,17 +288,17 @@ class NodeMDImg(BaseNode):
         return new_md_file_name
 
 
-if __name__ == "__main__":
-    setup_logging()
-
-    init_state = {
-        "md_path": r"D:\output\hak180产品安全手册\auto\hak180产品安全手册.md",
-        "md_content": None
-    }
-
-    node = NodeMDImg()
-    result = node(init_state)
-
-    # 打印结果
-    dumps = json.dumps(result)
-    print(dumps)
+# if __name__ == "__main__":
+#     setup_logging()
+#
+#     init_state = {
+#         "md_path": r"D:\output\hak180产品安全手册\auto\hak180产品安全手册.md",
+#         "md_content": None
+#     }
+#
+#     node = NodeMDImg()
+#     result = node(init_state)
+#
+#     # 打印结果
+#     dumps = json.dumps(result)
+#     print(dumps)

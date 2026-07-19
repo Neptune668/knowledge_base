@@ -269,17 +269,17 @@ class NodeDocumentSplit(BaseNode):
         return merged_sections
 
 
-if __name__ == "__main__":
-    node = NodeDocumentSplit()
-
-    with open(r"D:\output\hak180产品安全手册\auto\hak180产品安全手册_new.md", "r", encoding="utf-8") as f:
-        md_content = f.read()
-
-    init_state = {
-        "md_path": r"D:\output\hak180产品安全手册\auto\hak180产品安全手册_new.md",
-        "md_content": md_content,
-        "file_title": "B530_new",
-    }
-
-    process = node.process(init_state)
-    print(f"切分节点执行流程:{process}")
+# if __name__ == "__main__":
+#     node = NodeDocumentSplit()
+#
+#     with open(r"D:\output\hak180产品安全手册\auto\hak180产品安全手册_new.md", "r", encoding="utf-8") as f:
+#         md_content = f.read()
+#
+#     init_state = {
+#         "md_path": r"D:\output\hak180产品安全手册\auto\hak180产品安全手册_new.md",
+#         "md_content": md_content,
+#         "file_title": "B530_new",
+#     }
+#
+#     process = node.process(init_state)
+#     print(f"切分节点执行流程:{process}")
