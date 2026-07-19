@@ -18,7 +18,7 @@ class NodeSearchEmbedding(NodeBase):
          :return: 更新后的状态对象
          """
 
-         # TODO
+
          logger.info(f"【{self.name}】节点逻辑")
 
          # return state
