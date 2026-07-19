@@ -238,21 +238,21 @@ class NodeItemNameRecognition(BaseNode):
         return state
 
 
-if __name__ == '__main__':
-    node = NodeItemNameRecognition()
-
-    path = r"D:\output\hak180产品安全手册\auto\B530_new_chunks.json"
-
-    with open(path, "r", encoding="utf-8") as f:
-        chunks_json_data = f.read()
-
-    init_state = {
-        "file_title": "HAK180",
-        "chunks": json.loads(chunks_json_data),
-    }
-
-    process = node.process(init_state)
-    for chunk in process["chunks"]:
-        print(f'{chunk.get("title")}章节：{chunk.get("item_name")}')
-
-    print(process)
+# if __name__ == '__main__':
+#     node = NodeItemNameRecognition()
+#
+#     path = r"D:\output\hak180产品安全手册\auto\B530_new_chunks.json"
+#
+#     with open(path, "r", encoding="utf-8") as f:
+#         chunks_json_data = f.read()
+#
+#     init_state = {
+#         "file_title": "HAK180",
+#         "chunks": json.loads(chunks_json_data),
+#     }
+#
+#     process = node.process(init_state)
+#     for chunk in process["chunks"]:
+#         print(f'{chunk.get("title")}章节：{chunk.get("item_name")}')
+#
+#     print(process)

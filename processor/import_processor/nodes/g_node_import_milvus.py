@@ -2,8 +2,14 @@ import json
 import logging
 from typing import List, Dict, Any
 
-from processor.import_processor.base import BaseNode
+from pymilvus import DataType
+from sympy.interactive.session import enable_automatic_symbols
+
+from config.milvus_config import milvus_config
+from processor.import_processor.base import BaseNode, setup_logging
+from processor.import_processor.exceptions import StateFieldError, MilvusError
 from processor.import_processor.state import ImportGraphState
+from utils.milvus_utils import get_milvus_client, escape_milvus_string
 
 
 class NodeImportMilvus(BaseNode):
@@ -63,6 +69,16 @@ class NodeImportMilvus(BaseNode):
         """
         return chunks_json_data
 
-if __name__ == "__main__":
-    node = NodeImportMilvus()
-    node.process(None)
+# if __name__ == "__main__":
+#     path = r"D:\output\hak180产品安全手册\auto\B530_new_new_new_chunks.json"
+#     with open(path, "r") as f:
+#         state_json = f.read()
+#
+#     state = json.loads(state_json)
+#     init_state = {
+#         "chunks": state
+#     }
+#     node_import_milvus = NodeImportMilvus(init_state)
+    
+
+    # 执行核心处理流程
