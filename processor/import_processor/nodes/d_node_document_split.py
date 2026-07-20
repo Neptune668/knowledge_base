@@ -58,7 +58,7 @@ class NodeDocumentSplit(BaseNode):
         # 6 备份
         self._step_6_backup(state, sections)
 
-        state["chunks"] = None
+        state["chunks"] = sections
         return state
 
     # 步骤1：参数处理
