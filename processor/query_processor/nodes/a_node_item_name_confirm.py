@@ -75,7 +75,6 @@ class NodeItemNameConfirm(NodeBase):
         original_query = state.get("original_query")
         if not original_query:
             raise ValueError("核心参数original_query缺失")
-
         return session_id, original_query
 
     # 步骤4 模型提取意图主体
@@ -163,14 +162,60 @@ class NodeItemNameConfirm(NodeBase):
     # 步骤6 对齐结果
     def _step_6_align_item_names(self, query_results: List[Dict]) -> Dict:
         print("step_6: 对齐结果,高分结果和低分结果整合")
+        confirmed_item_names: List[str] = []
+        options: List[str] = []
+
+        for res in query_results:
+            extracted_name = res.get("extracted_name")
+            matches = res.get("matches")
+            if not matches:
+                continue
+
+            high_results = [m for m in matches if m.get("score", 0) >= 0.8]  # 高分结果
+            mid_results = [m for m in matches if m.get("score", 0) >= 0.6]  # 中分结果
+
+            """
+                有高分则取高分，无高分取中分
+            """
+            ############################################################
+            # 特殊情况：只有一条结果，且分数高于0.8
+            if len(high_results) == 1:
+                confirmed_item_names.append(high_results[0].get("item_name"))
+                continue
+
+            # 有多条匹配结果，找出最匹配的
+            if len(high_results) > 1:
+                picked = None
+                if extracted_name:
+                    for hr in high_results:
+                        if hr.get("item_name") == extracted_name:
+                            picked = hr
+                            break
+                # 如果没有和大模型识别的，则取分数最高的
+                if not picked:
+                    picked = high_results[0]
+
+                # 确认名称
+                confirmed_item_names.append(picked.get("item_name"))
+                continue
+            #########################################################
+            # 规则B：高于0.6低于0.8=可能匹配，有可选项options
+            if len(mid_results) > 0:
+                for mr in mid_results[:5]:
+                    options.append(mr.get("item_name"))
+            #########################################################
+
+        # 规则C：低于0.6,无匹配结果,不处理，都是空值
+
         return {
-            "confirmed_item_names": [],  # 确认后的高分商品名称（>0.8)
-            "options": [],  # 可能低分商品名称(>0.6)
+            "confirmed_item_names": list(set(confirmed_item_names)),  # 确认后的高分商品名称（>0.8)
+            "options": list(set(options)),  # 可能低分商品名称(>0.6)
         }
 
     # 步骤7 状态state信息整理#
     def _step_7_check_confirmation(self, state, align_result: Dict, history):
         print("step_7: 状态state信息,根据第六步高分低分对齐结果整理")
+
         return state
 
     # 步骤8 写入历史会话
