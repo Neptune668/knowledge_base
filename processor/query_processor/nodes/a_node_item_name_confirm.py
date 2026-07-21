@@ -222,6 +222,26 @@ class NodeItemNameConfirm(NodeBase):
     def _step_8_write_history(self, state, session_id, rewritten_query, message_id):
         print("step_8: 写入历史会话，更新")
 
+        # 若会话状态中有助手答案（分支B/C），写入助手消息到历史
+        if state.get("answer"):
+            save_chat_message(
+                session_id=session_id,  # 会话ID，关联所属会话
+                role="assistant",  # 消息角色：助手
+                text=state["answer"],  # 消息内容：向用户确认的提示语/无结果提示语
+                rewritten_query="",  # 助手消息无需改写查询，设为空
+                item_names=state.get("item_names", [])  # 关联的商品名列表（分支B/C均为空）
+            )
+
+        # 强制更新本次用户原始问题的关联信息（核心：补充改写查询、商品名）
+        save_chat_message(
+            session_id=session_id,  # 会话ID，关联所属会话
+            role="user",  # 消息角色：用户
+            text=state["original_query"],  # 消息内容：用户原始查询
+            rewritten_query=rewritten_query,  # 补充step3改写后的完整问题
+            item_names=state.get("item_names", []),  # 补充关联的商品名列表
+            message_id=message_id  # 消息ID，指定更新已存在的用户消息（而非新增）
+        )
+
 
 if __name__ == "__main__":
     # 初始化图状态
