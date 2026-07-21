@@ -48,7 +48,7 @@ class NodeItemNameConfirm(NodeBase):
         rewritten_query = extract_res["rewritten_query"]  # 模型改写后的问题
         state["rewritten_query"] = rewritten_query
         state["item_names"] = item_names
-        print(item_names)
+        # print(item_names)
         # 5，6 向量搜索(搜索知识库)，搜索结果对齐(整理)
         align_result = {}
         if len(item_names) >= 0:
@@ -126,10 +126,39 @@ class NodeItemNameConfirm(NodeBase):
         # 条件向量化
         embeddings = generate_embeddings(item_names)
         # 相似性匹配
+        for i in range(len(item_names)):
+            dense_vector = embeddings.get("dense")[i]
+            sparse_vector = embeddings.get("sparse")[i]
+        # 结果处理
+        reqs = create_hybrid_search_requests(dense_vector=dense_vector, sparse_vector=sparse_vector, limit=5)
+        search_res = hybrid_search(
+            client=milvus_client,
+            collection_name=collection_name,
+            reqs=reqs,
+            ranker_weights=(0.8, 0.2),
+            norm_score=True,
+            output_fields=["item_name"],
+        )
 
         # 结果处理
+        matches = []
+        if search_res and len(search_res) > 0:
+            # print("此处是意图识别的向量搜索结果：")
+            # print(search_res)
+            for hit in search_res[0]:
+                # 将search_res中的匹配结果封装到matches中
+                matches.append({
+                    "item_name": hit.entity.get("item_name"),
+                    "score": hit.get("distance"),
+                })
 
-        return results  # 返回
+        results.append({
+            "extracted_name": item_names[i],
+            "matches": matches  # 相似性匹配结果
+        })
+
+        # 返回
+        return results
 
     # 步骤6 对齐结果
     def _step_6_align_item_names(self, query_results: List[Dict]) -> Dict:
