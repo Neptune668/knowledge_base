@@ -1,9 +1,17 @@
 import json
 from typing import Dict, List
 
+from langchain_core.messages import SystemMessage, HumanMessage
+
+from config.milvus_config import milvus_config
 from processor.query_processor.base import NodeBase
+from processor.query_processor.prompt.item_name_confirm import ITEM_NAME_EXTRACT_TEMPLATE, \
+    ITEM_NAME_EXTRACT_SYSTEM_PROMPT
 from processor.query_processor.state import QueryGraphState
 from tool.logger import logger
+from utils.embedding_utils import generate_embeddings
+from utils.llm_utils import get_llm_client
+from utils.milvus_utils import get_milvus_client, create_hybrid_search_requests, hybrid_search
 from utils.mongo_history_utils import get_recent_messages, save_chat_message
 
 
@@ -72,18 +80,56 @@ class NodeItemNameConfirm(NodeBase):
     # 步骤4 模型提取意图主体
     def _step_4_extract_info(self, original_query, history) -> Dict:
         print("step_4: 模型提取意图主体")
+        # llm客户端
+        ai_client = get_llm_client(json_mode=True)
+        # 拼接上下文(history+original_query)，prompt
+        history_text = ""
+        for msg in history:
+            role = msg.get("role")
+            text = msg.get("text")
+            history_text += f"{role}: {text}\n"
 
-        result = {
-            "item_names": [],
-            "rewritten_query": original_query,
-        }
+        user_prompt = ITEM_NAME_EXTRACT_TEMPLATE.format(
+            history_text = history_text,
+            original_query = original_query,
+        )
+
+        message = [
+            SystemMessage(content=ITEM_NAME_EXTRACT_SYSTEM_PROMPT),
+            HumanMessage(content=user_prompt)
+        ]
+
+        response = ai_client.invoke(message)
+        response_content = response.content
+
+        # 结果解析
+        result = json.loads(response_content)
+        print("result:", result)
+        if "item_names" not in result:
+            result["item_names"] = []
+        if "rewritten_query" not in result:
+            result["rewritten_query"] = original_query
+        if result["item_names"]:
+            result["item_names"] = [name.replace(" ", "").replace("\n", "").replace("\t", "").replace("\r", "") for name
+                                    in result["item_names"]]
+
         return result
 
     # 步骤5 向量化并检索
     def _step_5_vectorize_and_query(self, item_names) -> List[Dict]:
         print("step_5: 向量化并检索,检索出来对应item_name的向量库中的相似的商品名称的列表")
-        result: List[Dict] = []
-        return result
+        results: List[Dict] = []  # 大模型识别的可能名称:milvus的匹配结果集合
+        # milvus的客户端，集合名称
+        milvus_client = get_milvus_client()
+        collection_name = milvus_config.item_name_collection
+
+        # 条件向量化
+        embeddings = generate_embeddings(item_names)
+        # 相似性匹配
+
+        # 结果处理
+
+        return results  # 返回
 
     # 步骤6 对齐结果
     def _step_6_align_item_names(self, query_results: List[Dict]) -> Dict:
