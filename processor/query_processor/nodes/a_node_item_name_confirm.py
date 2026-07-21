@@ -12,7 +12,8 @@ from tool.logger import logger
 from utils.embedding_utils import generate_embeddings
 from utils.llm_utils import get_llm_client
 from utils.milvus_utils import get_milvus_client, create_hybrid_search_requests, hybrid_search
-from utils.mongo_history_utils import get_recent_messages, save_chat_message
+from utils.mongo_history_utils import get_recent_messages, save_chat_message, update_message_item_names
+
 
 
 class NodeItemNameConfirm(NodeBase):
@@ -215,7 +216,40 @@ class NodeItemNameConfirm(NodeBase):
     # 步骤7 状态state信息整理#
     def _step_7_check_confirmation(self, state, align_result: Dict, history):
         print("step_7: 状态state信息,根据第六步高分低分对齐结果整理")
+        confirmed = align_result.get("confirmed_item_names")
+        options = align_result.get("options")
 
+        # 1 有命中(>0.8)
+        if confirmed:
+            # 更新会话信息：将命中结果更新到与本次命中结果有关的所有的之前的会话中（session_id,_id）
+            ids_to_update = []
+            for msg in history:
+                if not msg.get("item_names"):
+                    mid = msg.get("_id")
+                    if mid:
+                        ids_to_update.append(str(mid))
+            if ids_to_update:
+                update_message_item_names(ids_to_update, confirmed)
+
+            # 封装结果
+            state["item_names"] = confirmed
+            state["answer"] = ""
+
+        # 2 有备选(>0.6)
+        if options:
+            # 封装结果
+            state["item_names"] = []
+            options_str = "、".join(options)
+            state["answer"] = f"您是想问以下哪个产品：{options_str}？请明确一下型号。"
+
+        # 3 没命中
+        if not confirmed and not options:
+            # 封装结果
+            state[
+                "answer"] = "抱歉，未找到相关产品，请提供准确型号以便我为您查询。"  # 如果有高于0.6的可选项options(反问用户，你想问的是xxx设备吗)或者低于0.6（抱歉，未找到相关产品）
+            state["item_names"] = []  # 如果有高于0.8的，才封装state进入后续节点
+
+        # 4 返回state
         return state
 
     # 步骤8 写入历史会话
