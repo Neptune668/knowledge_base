@@ -43,11 +43,12 @@ class NodeItemNameConfirm(NodeBase):
 
         # 4 模型提取主体：rewritten_query(改写问题),item_names(模型识别到的设备主体)
         extract_res = self._step_4_extract_info(original_query, history)
+        print("extract_res:", extract_res)
         item_names = extract_res["item_names"]  # 可能的设备主体名称
         rewritten_query = extract_res["rewritten_query"]  # 模型改写后的问题
         state["rewritten_query"] = rewritten_query
         state["item_names"] = item_names
-
+        print(item_names)
         # 5，6 向量搜索(搜索知识库)，搜索结果对齐(整理)
         align_result = {}
         if len(item_names) >= 0:
@@ -86,20 +87,19 @@ class NodeItemNameConfirm(NodeBase):
         history_text = ""
         for msg in history:
             role = msg.get("role")
-            text = msg.get("text")
-            history_text += f"{role}: {text}\n"
+            content = msg.get("text")
+            history_text += f"{role}: {content}\n"
 
         user_prompt = ITEM_NAME_EXTRACT_TEMPLATE.format(
-            history_text = history_text,
-            original_query = original_query,
+            history_text=history_text,
+            query=original_query,
         )
-
-        message = [
+        messages = [
             SystemMessage(content=ITEM_NAME_EXTRACT_SYSTEM_PROMPT),
             HumanMessage(content=user_prompt)
         ]
 
-        response = ai_client.invoke(message)
+        response = ai_client.invoke(messages)
         response_content = response.content
 
         # 结果解析
