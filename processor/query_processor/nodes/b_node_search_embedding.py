@@ -55,4 +55,11 @@ class NodeSearchEmbedding(NodeBase):
         return {"embedding_chunks": response[0] if response else []}  # [[结果解析]]
 
 
-
+if __name__ == "__main__":
+    node_search_embedding = NodeSearchEmbedding()
+    init_state = {
+        "item_names": ["兄弟HAK180烫金机", "百度一下"],
+        "rewritten_query": "兄弟请帮我查一下HAK180烫金机是什么?"
+    }
+    process = node_search_embedding.process(init_state)
+    print(json.dumps(process, ensure_ascii=False, indent=4))
