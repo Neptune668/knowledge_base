@@ -60,8 +60,33 @@ class NodeSearchEmbeddingHyde(NodeBase):
         hyde_doc = ai_client.invoke(hyde_prompt).content
 
         return hyde_doc
-    def _step_2_create_embedding_hyde(self, rewritten_query, hyde_doc, item_names):
-        pass
+
+    def _setp_2_search_embedding_hyde(self, rewritten_query: str, hyde_doc: str, item_names: list):
+        print("步骤2：根据假设性文档向量搜索")
+        # 1 拼接上下文
+        embedding_context = rewritten_query + "" + hyde_doc
+
+        # 2 将上下文向量化
+        embeddings = generate_embeddings([embedding_context])
+        dense_vector = embeddings.get("dense")[0]
+        sparse_vector = embeddings.get("sparse")[0]
+
+        # 3 向量搜索
+        milvus_client = get_milvus_client()
+        collection_name = milvus_config.chunks_collection
+        reqs = create_hybrid_search_requests(
+            dense_vector=dense_vector,
+            sparse_vector=sparse_vector,
+            expr=f'item_name in {item_names}'
+        )
+        response = hybrid_search(
+            client=milvus_client,
+            collection_name=collection_name,
+            reqs=reqs,
+            limit=5,
+            output_fields=["chunk_id", "content", "item_name"]
+        )
+        return response
 
 if __name__ == "__main__":
     node_search_embedding_hyde = NodeSearchEmbeddingHyde()
