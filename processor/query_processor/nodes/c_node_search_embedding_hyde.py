@@ -48,3 +48,26 @@ class NodeSearchEmbeddingHyde(NodeBase):
         # return state
         return {"hyde_embedding_chunks": response[0] if response else [], "hyde_doc": hyde_doc}
 
+    def _step_1_create_embedding_hyde_doc(self, rewritten_query: str) -> str:
+        print("步骤1：基于大模型生成假设性文档")
+        # 1 客户端
+        ai_client = get_llm_client()
+
+        # 2 提示词
+        hyde_prompt = HYDE_PROMPT.format(rewritten_query=rewritten_query)
+
+        # 3 假设性回答
+        hyde_doc = ai_client.invoke(hyde_prompt).content
+
+        return hyde_doc
+    def _step_2_create_embedding_hyde(self, rewritten_query, hyde_doc, item_names):
+        pass
+
+if __name__ == "__main__":
+    node_search_embedding_hyde = NodeSearchEmbeddingHyde()
+    init_state = {
+        "item_names": ["兄弟HAK180烫金机", "百度一下"],
+        "rewritten_query": "兄弟请帮我查一下HAK180烫金机是什么?"
+    }
+    process = node_search_embedding_hyde.process(init_state)
+    # print(json.dumps(process, ensure_ascii=False, indent=4))
