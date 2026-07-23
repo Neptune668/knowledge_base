@@ -27,6 +27,7 @@ class NodeSearchEmbeddingHyde(NodeBase):
         """
 
         logger.info(f"【{self.name}】节点逻辑")
+
         # 1 参数处理
         item_names = state.get("item_names")  # 命中设备名
         rewritten_query = state.get("rewritten_query")  # 语义搜索条件
@@ -63,8 +64,9 @@ class NodeSearchEmbeddingHyde(NodeBase):
 
     def _setp_2_search_embedding_hyde(self, rewritten_query: str, hyde_doc: str, item_names: list):
         print("步骤2：根据假设性文档向量搜索")
+
         # 1 拼接上下文
-        embedding_context = rewritten_query + "" + hyde_doc
+        embedding_context = rewritten_query + " " + hyde_doc
 
         # 2 将上下文向量化
         embeddings = generate_embeddings([embedding_context])
@@ -86,13 +88,15 @@ class NodeSearchEmbeddingHyde(NodeBase):
             limit=5,
             output_fields=["chunk_id", "content", "item_name"]
         )
+
         return response
+
 
 if __name__ == "__main__":
     node_search_embedding_hyde = NodeSearchEmbeddingHyde()
     init_state = {
-        "item_names": ["兄弟HAK180烫金机", "百度一下"],
-        "rewritten_query": "兄弟请帮我查一下HAK180烫金机是什么?"
+        "item_names": ["打印机", "百度一下"],
+        "rewritten_query": "兄弟请帮我查一下打印机是什么?"
     }
     process = node_search_embedding_hyde.process(init_state)
     # print(json.dumps(process, ensure_ascii=False, indent=4))

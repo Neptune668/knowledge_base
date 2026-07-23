@@ -11,6 +11,7 @@ from processor.import_processor.exceptions import StateFieldError
 from processor.import_processor.import_config import get_config
 from processor.import_processor.state import ImportGraphState
 
+
 class NodeDocumentSplit(BaseNode):
     """
     文档切分节点：智能文档切片
@@ -36,7 +37,6 @@ class NodeDocumentSplit(BaseNode):
         # print(f"标题数量: {title_count}")
         # print(f"行数: {lines_count}")
 
-
         print("----------------------------------------------------------------------------------------------")
 
         # 3 无标题兜底(默认标题)
@@ -47,10 +47,10 @@ class NodeDocumentSplit(BaseNode):
         for section in sections:
             print(f"{section['title']}")
             print(f"{section['content']}")
-            print("========================================================================================================")
+            print(
+                "========================================================================================================")
         print(f"标题数量: {title_count}")
         print(f"行数: {lines_count}")
-
 
         # 5 打印日志
         self._step_5_print_stats(lines_count, sections)
@@ -166,7 +166,7 @@ class NodeDocumentSplit(BaseNode):
         print("node_document_split: 步骤6：备份")
 
         # sections切分结果输出文档路径
-        path = Path(state.get("md_path")).parent / f'{state.get("file_title")}_chunks.json'
+        path = Path(state.get("md_path")).parent / f'{state.get("file_title")}_new_chunks.json'
         with open(path, "w", encoding="utf-8") as f:
             json.dump(
                 sections,
@@ -269,17 +269,17 @@ class NodeDocumentSplit(BaseNode):
         return merged_sections
 
 
-# if __name__ == "__main__":
-#     node = NodeDocumentSplit()
-#
-#     with open(r"D:\output\hak180产品安全手册\auto\hak180产品安全手册_new.md", "r", encoding="utf-8") as f:
-#         md_content = f.read()
-#
-#     init_state = {
-#         "md_path": r"D:\output\hak180产品安全手册\auto\hak180产品安全手册_new.md",
-#         "md_content": md_content,
-#         "file_title": "B530_new",
-#     }
-#
-#     process = node.process(init_state)
-#     print(f"切分节点执行流程:{process}")
+if __name__ == "__main__":
+    node = NodeDocumentSplit()
+
+    with open("E:\output\B530\hybrid_auto\B530_new.md", "r", encoding="utf-8") as f:
+        md_content = f.read()
+
+    init_state = {
+        "md_path": "E:\output\B530\hybrid_auto\B530_new.md",
+        "md_content": md_content,
+        "file_title": "B530_new",
+    }
+
+    process = node.process(init_state)
+    print(f"切分节点执行流程:{process}")
