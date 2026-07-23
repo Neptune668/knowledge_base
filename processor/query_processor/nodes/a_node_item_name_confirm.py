@@ -115,47 +115,48 @@ class NodeItemNameConfirm(NodeBase):
 
         return result
 
-    # 步骤5 向量化并检索
+        # 步骤5 向量化并检索
     def _step_5_vectorize_and_query(self, item_names) -> List[Dict]:
         print("step_5: 向量化并检索,检索出来对应item_name的向量库中的相似的商品名称的列表")
         results: List[Dict] = []  # 大模型识别的可能名称:milvus的匹配结果集合
+
         # milvus的客户端，集合名称
         milvus_client = get_milvus_client()
         collection_name = milvus_config.item_name_collection
 
         # 条件向量化
         embeddings = generate_embeddings(item_names)
+
         # 相似性匹配
         for i in range(len(item_names)):
             dense_vector = embeddings.get("dense")[i]
             sparse_vector = embeddings.get("sparse")[i]
-        # 结果处理
-        reqs = create_hybrid_search_requests(dense_vector=dense_vector, sparse_vector=sparse_vector, limit=5)
-        search_res = hybrid_search(
-            client=milvus_client,
-            collection_name=collection_name,
-            reqs=reqs,
-            ranker_weights=(0.8, 0.2),
-            norm_score=True,
-            output_fields=["item_name"],
-        )
+            reqs = create_hybrid_search_requests(dense_vector=dense_vector, sparse_vector=sparse_vector, limit=5)
+            search_res = hybrid_search(
+                client=milvus_client,
+                collection_name=collection_name,
+                reqs=reqs,
+                ranker_weights=(0.8, 0.2),
+                norm_score=True,
+                output_fields=["item_name"],
+            )
 
-        # 结果处理
-        matches = []
-        if search_res and len(search_res) > 0:
-            # print("此处是意图识别的向量搜索结果：")
-            # print(search_res)
-            for hit in search_res[0]:
-                # 将search_res中的匹配结果封装到matches中
-                matches.append({
-                    "item_name": hit.entity.get("item_name"),
-                    "score": hit.get("distance"),
-                })
+            # 结果处理
+            matches = []
+            if search_res and len(search_res) > 0:
+                # print("此处是意图识别的向量搜索结果：")
+                # print(search_res)
+                for hit in search_res[0]:
+                    # 将search_res中的匹配结果封装到matches中
+                    matches.append({
+                        "item_name": hit.entity.get("item_name"),
+                        "score": hit.get("distance"),
+                    })
 
-        results.append({
-            "extracted_name": item_names[i],
-            "matches": matches  # 相似性匹配结果
-        })
+            results.append({
+                "extracted_name": item_names[i],
+                "matches": matches  # 相似性匹配结果
+            })
 
         # 返回
         return results
