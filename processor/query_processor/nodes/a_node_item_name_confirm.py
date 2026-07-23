@@ -15,7 +15,6 @@ from utils.milvus_utils import get_milvus_client, create_hybrid_search_requests,
 from utils.mongo_history_utils import get_recent_messages, save_chat_message, update_message_item_names
 
 
-
 class NodeItemNameConfirm(NodeBase):
     """
     节点功能：确认用户问题中的核心商品名称。
@@ -44,17 +43,27 @@ class NodeItemNameConfirm(NodeBase):
 
         # 4 模型提取主体：rewritten_query(改写问题),item_names(模型识别到的设备主体)
         extract_res = self._step_4_extract_info(original_query, history)
-        print("extract_res:", extract_res)
         item_names = extract_res["item_names"]  # 可能的设备主体名称
         rewritten_query = extract_res["rewritten_query"]  # 模型改写后的问题
         state["rewritten_query"] = rewritten_query
         state["item_names"] = item_names
-        # print(item_names)
+        print("extract_res:", extract_res)
+
         # 5，6 向量搜索(搜索知识库)，搜索结果对齐(整理)
         align_result = {}
         if len(item_names) >= 0:
             query_results = self._step_5_vectorize_and_query(item_names)
+            # print(f"milvus根据提取到的item_names的匹配结果：")
+            # for query_result in query_results:
+            #     print(query_result)
             align_result = self._step_6_align_item_names(query_results)
+            # print(
+            #     "milvus根据提取到的item_names的匹配结果,并且经过了分数整理(结果对齐)高分：confirmed_item_names，中分：options")
+            # names_list = align_results["confirmed_item_names"]
+            # options = align_results["options"]
+            # print(names_list)
+            # print("----------------------")
+            # print(options)
         else:
             logger.info("Node: 未提取到商品名，跳过向量检索")
 
@@ -76,13 +85,16 @@ class NodeItemNameConfirm(NodeBase):
         original_query = state.get("original_query")
         if not original_query:
             raise ValueError("核心参数original_query缺失")
+
         return session_id, original_query
 
     # 步骤4 模型提取意图主体
     def _step_4_extract_info(self, original_query, history) -> Dict:
         print("step_4: 模型提取意图主体")
+
         # llm客户端
         ai_client = get_llm_client(json_mode=True)
+
         # 拼接上下文(history+original_query)，prompt
         history_text = ""
         for msg in history:
@@ -99,8 +111,11 @@ class NodeItemNameConfirm(NodeBase):
             HumanMessage(content=user_prompt)
         ]
 
+        # 调用llm大模型
         response = ai_client.invoke(messages)
         response_content = response.content
+        # if response_content.startswith("```json"):
+        #     response_content = response_content.replace("```json", "").replace("```", "")
 
         # 结果解析
         result = json.loads(response_content)
@@ -115,7 +130,7 @@ class NodeItemNameConfirm(NodeBase):
 
         return result
 
-        # 步骤5 向量化并检索
+    # 步骤5 向量化并检索
     def _step_5_vectorize_and_query(self, item_names) -> List[Dict]:
         print("step_5: 向量化并检索,检索出来对应item_name的向量库中的相似的商品名称的列表")
         results: List[Dict] = []  # 大模型识别的可能名称:milvus的匹配结果集合
@@ -167,9 +182,10 @@ class NodeItemNameConfirm(NodeBase):
         confirmed_item_names: List[str] = []
         options: List[str] = []
 
+        # 规则A：高于0.8分=高度匹配
         for res in query_results:
-            extracted_name = res.get("extracted_name")
-            matches = res.get("matches")
+            extracted_name = (res.get("extracted_name", "") or "").strip()  # 模型识别的商品名称
+            matches = res.get("matches", []) or []
             if not matches:
                 continue
 
@@ -214,7 +230,7 @@ class NodeItemNameConfirm(NodeBase):
             "options": list(set(options)),  # 可能低分商品名称(>0.6)
         }
 
-    # 步骤7 状态state信息整理#
+    # 步骤7 状态state信息整理
     def _step_7_check_confirmation(self, state, align_result: Dict, history):
         print("step_7: 状态state信息,根据第六步高分低分对齐结果整理")
         confirmed = align_result.get("confirmed_item_names")
@@ -281,7 +297,7 @@ class NodeItemNameConfirm(NodeBase):
 if __name__ == "__main__":
     # 初始化图状态
     init_state = {
-        "original_query": "华为显示器咋个用法？",
+        "original_query": "B530这个玩意咋鼓捣呀？",
         "session_id": "123"
     }
 
