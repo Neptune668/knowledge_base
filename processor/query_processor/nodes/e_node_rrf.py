@@ -45,6 +45,25 @@ class NodeRrf(NodeBase):
         print(f"rrf_chunks：{rrf_chunks}")
         return state
 
+    def _rrf_merge(self, rrf_inputs: List[Tuple], k: int = 60, max_results: int = 5):
+        print("向量搜索和假设性搜索的融合函数")
+        chunk_scores = {}
+        chunk_data = {}
+
+        # 循环处理融合数据
+        for rrf_input, weight in rrf_inputs:
+            for rank, doc in enumerate(rrf_input):
+                chunk_id = doc.get("chunk_id")
+                chunk_scores = chunk_scores.get(chunk_id, 0) + weight / (k + rank)
+                chunk_data.setdefault(chunk_id, doc)
+        # 未排序的结果
+        unsorted_results = [(chunk_data[cid], score) for cid, score in chunk_scores.items()]
+
+        # 排序结果
+        sorted_results = sorted(unsorted_results, key=lambda x: x[1], reverse=True)
+
+        # 返回rrf排序结果
+        return sorted_results
 
 if __name__ == '__main__':
     # 模拟两路检索结果
