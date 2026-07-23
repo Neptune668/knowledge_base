@@ -54,16 +54,16 @@ class NodeRrf(NodeBase):
         for rrf_input, weight in rrf_inputs:
             for rank, doc in enumerate(rrf_input):
                 chunk_id = doc.get("chunk_id")
-                chunk_scores = chunk_scores.get(chunk_id, 0) + weight / (k + rank)
+                chunk_scores[chunk_id] = chunk_scores.get(chunk_id, 0.0) + weight / (k + rank)
                 chunk_data.setdefault(chunk_id, doc)
         # 未排序的结果
-        unsorted_results = [(chunk_data[cid], score) for cid, score in chunk_scores.items()]
+        unsorted_results = [(chunk_data[cid], score) for cid, score in chunk_scores.items()]  # List[Tuple(doc,score)]
 
         # 排序结果
         sorted_results = sorted(unsorted_results, key=lambda x: x[1], reverse=True)
 
         # 返回rrf排序结果
-        return sorted_results
+        return sorted_results[:max_results] if max_results else sorted_results
 
 if __name__ == '__main__':
     # 模拟两路检索结果
