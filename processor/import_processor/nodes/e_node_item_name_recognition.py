@@ -1,9 +1,11 @@
 import json
+from pathlib import Path
 from typing import List, Dict
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from pymilvus import DataType
+from sympy.interactive.session import enable_automatic_symbols
 
 from config.lm_config import lm_config
 from config.milvus_config import milvus_config
@@ -27,22 +29,22 @@ class NodeItemNameRecognition(BaseNode):
 
         # 2 上下文拼接
         context = self._step_2_build_context(file_title, chunks)
-        print(context)
+
         # 3 模型识别(总结)
         item_name = self._step_3_call_llm(file_title, context)
         print(f"iterm_name:{item_name}")
-        print(item_name)
 
         # 4 回填数据(item_name - > chunks)
         self._step_4_update_chunks(state, chunks, item_name)
-        # path = r"D:\output\hak180产品安全手册\auto\B530_new_new_chunks.json"
-        # with open(path, "w", encoding="utf-8") as f:
-        #     json.dump(
-        #         chunks,
-        #         f,
-        #         ensure_ascii=False,
-        #         indent=2
-        #     )
+        path = f"{Path(state.get('md_path')).parent}/{state.get('file_title')}_new_new_chunks.json"
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(
+                chunks,
+                f,
+                ensure_ascii=False,
+                indent=2
+            )
+
         # 5 主体名称向量化（稠密，稀疏）
         dense_vector, sparse_vector = self._step_5_generate_vectors(item_name)
         print(f"dense_vector:{dense_vector}")
@@ -58,6 +60,7 @@ class NodeItemNameRecognition(BaseNode):
         file_title = state["file_title"]
         if not file_title:
             raise StateFieldError(field_name="file_title", message="文件标题不能为空", expected_type=str)
+
         chunks = state["chunks"]
         if not chunks:
             raise StateFieldError(field_name="chunks", message="chunks不能为空", expected_type=list)
@@ -74,8 +77,8 @@ class NodeItemNameRecognition(BaseNode):
         parts: List[Dict] = []
         total_chars = 0
         for index, chunk in enumerate(chunks[:k], start=1):
-            chunk_title = chunk.get("title", "")
-            chunk_content = chunk.get("content", "")
+            chunk_title = chunk.get("title", "").strip()
+            chunk_content = chunk.get("content", "").strip()
 
             # 格式化
             piece = f"【切片{index}】\n标题{chunk_title}\n内容：{chunk_content}"
@@ -88,14 +91,17 @@ class NodeItemNameRecognition(BaseNode):
             if total_chars > chunk_size:
                 break
 
+        # 截断处理
         context = "\n\n".join(parts).strip()
         final_context = context[:chunk_size]
         return final_context
 
     def _step_3_call_llm(self, file_title, context) -> str:
         print("node_item_name_recognition: 步骤3：模型识别")
+
         if not context:
             return file_title
+
         # llm
         llm_ai = ChatOpenAI(
             model=lm_config.llm_model,
@@ -107,21 +113,20 @@ class NodeItemNameRecognition(BaseNode):
 
         # 提示词
         prompt = f"""
-                       请从以下信息中识别出商品名称与型号：
-                       文件名：{file_title}
+                请从以下信息中识别出商品名称与型号：
+                文件名：{file_title}
 
-                       正文切片（用于辅助识别）：
-                       {context}
+                正文切片（用于辅助识别）：
+                {context}
 
-                       要求：
-                       1. 返回内容为字符串形式，最好是带品牌、型号和名称的完整商品名称。比如：苏伯尓5000W大功率电磁炉；
-                       2. 返回结果应该只包含商品名称，不要添加任何解释或其他内容；
-                       3. 如果无法识别商品名称,请返回空字符串。
-               """
-
+                要求：
+                1. 返回内容为字符串形式，最好是带品牌、型号和名称的完整商品名称。比如：苏伯尓5000W大功率电磁炉；
+                2. 返回结果应该只包含商品名称，不要添加任何解释或其他内容；
+                3. 如果无法识别商品名称,请返回空字符串。
+        """
         message = [
             SystemMessage("你是一个专业的商品名称识别模型，请根据提供的信息，识别商品名称。名称最好不要超过20个字"),
-            HumanMessage(prompt)
+            HumanMessage(content=prompt)
         ]
 
         # 调用
@@ -134,6 +139,7 @@ class NodeItemNameRecognition(BaseNode):
         # 兜底
         if not item_name:
             item_name = file_title
+
         return item_name
 
     def _step_4_update_chunks(self, state, chunks, item_name):
@@ -189,6 +195,7 @@ class NodeItemNameRecognition(BaseNode):
             field_name="sparse_vector",
             datatype=DataType.SPARSE_FLOAT_VECTOR
         )
+
         # 索引
         index_params = client.prepare_index_params()
         index_params.add_index(
@@ -215,6 +222,7 @@ class NodeItemNameRecognition(BaseNode):
                 # "quantization": "none" → 存储原始向量，不压缩
                 # "quantization": "sq8" → 存储压缩后的向量（8-bit 量化
             })
+
         # 建表
         if not client.has_collection(collection_name):
             client.create_collection(collection_name=collection_name, schema=schema, index_params=index_params)
@@ -229,9 +237,9 @@ class NodeItemNameRecognition(BaseNode):
             "file_title": file_title,
             "item_name": item_name,
             "dense_vector": dense_vector,
-            "sparse_vector": sparse_vector,
+            "sparse_vector": sparse_vector
         }
-        client.insert(collection_name=collection_name, data=data)
+        client.insert(collection_name, [data])
         client.load_collection(collection_name)  # 将表数据从存储引擎加载到搜索引擎，为了将来查询相似度用
 
         state["item_name"] = item_name
@@ -241,14 +249,14 @@ class NodeItemNameRecognition(BaseNode):
 # if __name__ == '__main__':
 #     node = NodeItemNameRecognition()
 #
-#     path = r"D:\output\hak180产品安全手册\auto\B530_new_chunks.json"
+#     path = "E:\output\B530\hybrid_auto\B530_new_chunks.json"
 #
 #     with open(path, "r", encoding="utf-8") as f:
 #         chunks_json_data = f.read()
 #
 #     init_state = {
-#         "file_title": "HAK180",
-#         "chunks": json.loads(chunks_json_data),
+#         "file_title": "D530",
+#         "chunks": json.loads(chunks_json_data)
 #     }
 #
 #     process = node.process(init_state)
