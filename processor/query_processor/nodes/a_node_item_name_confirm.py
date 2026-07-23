@@ -280,7 +280,7 @@ class NodeItemNameConfirm(NodeBase):
 if __name__ == "__main__":
     # 初始化图状态
     init_state = {
-        "original_query": "B530这个玩意咋鼓捣呀？",
+        "original_query": "华为显示器咋个用法？",
         "session_id": "123"
     }
 
