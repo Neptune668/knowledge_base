@@ -36,7 +36,7 @@ class NodeRerank(NodeBase):
         # 4 返回结果封装
         print("步骤4：返回结果封装")
         state["reranked_docs"] = cutoff_docs
-
+        print(cutoff_docs)
         return state
 
     # 步骤1：将web_doc和rrf_chunks节点的数据合并
@@ -85,12 +85,13 @@ class NodeRerank(NodeBase):
         #         "source": doc.get("source"),
         #         "score": float(score),
         #     })
-        scored_docs_docs = sorted(
+        sorted_score_docs = sorted(
             scored_docs,
             key=lambda x: x["score"],
             reverse=True
         )
-        return scored_docs_docs
+        # print(sorted_score_docs)
+        return sorted_score_docs
 
     # 步骤3：断崖测试(分数差距，分数比率)去掉过低的匹配结果
     def _step_3_cliff_cutoff(self, reranked_docs):
@@ -98,7 +99,7 @@ class NodeRerank(NodeBase):
         # 最多要多条结果
         upper_bound = min(10, len(reranked_docs))
         # 最少要少条结果
-        lower_bound = max(3, len(reranked_docs))
+        lower_bound = min(3, len(reranked_docs))
         # 断崖位置
         cutoff_pos = upper_bound
         for index in range(lower_bound - 1, upper_bound - 1):
@@ -107,12 +108,14 @@ class NodeRerank(NodeBase):
             # 分差
             abs_gap = current_score - next_score
             # 比率
-            ral_gap = abs_gap / abs(current_score + 1e-6)
-            if abs_gap >= 0.5 or ral_gap >= 0.25:
-                cutoff_pos = index + 1
+            rel_gap = abs_gap / (abs(current_score) + 1e-6)
+
+            if abs_gap >= 0.5 or rel_gap >= 0.25:
+                cutoff_pos = index + 1  # 找到断崖位置
                 break
 
         return reranked_docs[:cutoff_pos]
+
 
 if __name__ == "__main__":
     mock_state = {
