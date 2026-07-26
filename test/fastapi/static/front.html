@@ -10,8 +10,8 @@
         <button onclick="test()">点击请求后端服务</button>
         <script>
             async function test() {
-                const r = document.getElementById("r");
-                const response = await fetch("http://127.0.0.1:8002/api/data");
+                const r = document.getElementById('r');
+                const response = await fetch('http://127.0.0.1:8002/api/data');
                 const jsonData = await response.json();
                 jsonStr = JSON.stringify(jsonData);
                 r.innerText = jsonStr
