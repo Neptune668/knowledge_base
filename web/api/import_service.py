@@ -17,7 +17,6 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, BackgroundTasks, UploadFile, File
 from starlette.middleware.cors import CORSMiddleware
 
-
 from utils.minio_utils import get_minio_client
 from utils.task_utils import add_running_task, add_done_task, update_task_status, get_task_status, get_done_task_list, \
     get_running_task_list
@@ -37,6 +36,7 @@ app.add_middleware(
     allow_methods=["*"],  # 允许的请求方法
     allow_headers=["*"],  # 允许的请求头
 )
+
 
 # 3. 静态页面路由：返回文件导入前端页面
 # 访问地址：http://localhost:8000/import.html
@@ -109,7 +109,7 @@ async def upload_files(background_tasks: BackgroundTasks, files: List[UploadFile
     :return: 包含上传结果和所有任务ID的JSON响应
     """
     # 1. 构建本地存储根目录：项目根目录/doc/YYYYMMDD（按日期分层，方便管理）
-    data_based_root_dir = os.getenv("DATA_BASED_ROOT_DIR")
+    data_based_root_dir = os.getenv("DATA_BASED_ROOT_DIR", "./doc")  # 给默认值
     data_dir = os.path.join(data_based_root_dir, datetime.now().strftime("%Y%m%d"))
     # 初始化任务ID列表，用于返回给前端（一个文件对应一个TaskID）
     task_ids = []
@@ -201,4 +201,5 @@ async def get_task_progress(task_id: str):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app=app,host="127.0.0.1",port=8000)
+    import uvicorn
+    uvicorn.run(app=app, host="127.0.0.1", port=8000)

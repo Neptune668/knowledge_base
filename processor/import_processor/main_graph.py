@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
     workflow = KBImportWorkflow()
     # workflow_graph = workflow.graph
-    init_state = {"import_file_path": r"D:\test_pdf\1.pdf"}
+    init_state = {"import_file_path": r"D:\test_pdf\华为擎云 W525 用户指南-(PGUW-WBX0,KOS&UOS_02,zh-cn).pdf"}
 
     for event in workflow.run(init_state, stream=True):
         print(f"state: {event}")
