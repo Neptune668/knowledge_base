@@ -197,10 +197,12 @@ def generate_customer_service_dataset(total=1000):
 if __name__ == "__main__":
     dataset = generate_customer_service_dataset(1000)
 
-    # 保存为 JSON 文件
-    output_path = "customer_service_dataset.json"
+    # 以 JSON Lines 格式保存，每行一个 JSON 对象
+    output_path = "keywords_data_sharegpt.jsonl"  # 建议使用 .jsonl 或 .ndjson 扩展名
     with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(dataset, f, ensure_ascii=False, indent=2)
+        for item in dataset:
+            line = json.dumps(item, ensure_ascii=False)  # 不转义中文，紧凑输出
+            f.write(line + "\n")
 
     print(f"✅ 客服数据集生成完成！共 {len(dataset)} 条样本")
     print(f"📁 保存路径: {output_path}")

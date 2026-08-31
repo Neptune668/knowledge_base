@@ -154,8 +154,11 @@ def generate_dataset(total=1000):
 
 if __name__ == "__main__":
     dataset = generate_dataset(1000)
-    # 保存到当前目录下的 python_knowledge_base.json
-    with open("python_knowledge_base.json", "w", encoding="utf-8") as f:
-        json.dump(dataset, f, ensure_ascii=False, indent=2)
-    print("✅ 已生成 1000 条 Python 知识库数据，保存为 python_knowledge_base.json")
+
+    # 保存为 JSON Lines 格式（每行一个 JSON 对象，不带缩进）
+    with open("keywords_data_sharegpt2.jsonl", "w", encoding="utf-8") as f:
+        for item in dataset:
+            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+
+    print("✅ 已生成 1000 条 Python 知识库数据，保存为 keywords_data_sharegpt2.jsonl")
     print(f"总样本数: {len(dataset)}")
